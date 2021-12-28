@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="promotionTest">
+
+<!-- 승진평가 대사장 리스트 전체 -->
+<select id="promotiontestpeople" resultType="PromotionTestVO" parameterType="int">
+	SELECT
+		b.dname, a.NAME , b.ID_EMP , b.duty_d , b.lev_l , b.score, a.EMAIL,a.depart,a.duty, a.lev,
+						(SELECT
+							count(*)
+						FROM
+							(select * from promotiontestRead where Id_emp_v=ID_EMP_V)
+						WHERE
+							ID_EMP_P=#{Id_emp_p})rt	
+	FROM
+		INFO_EMP A,
+		(SELECT ID_EMP_V Id_emp, sum(SCORE)/4 score, lev_l, duty_d,dname 
+			FROM (SELECT * FROM EVALUATIONREAD WHERE <![CDATA[(TO_NUMBER(TO_CHAR(SYSDATE,'yyyyMM'))-TO_NUMBER(TO_CHAR(SAVEDATE,'yyyyMM'))< 200))]]>
+			GROUP BY ID_EMP_V,Lev_l,duty_d,dname
+			HAVING sum(SCORE)/4>= 75)B
+	WHERE a.ID_EMP =b.Id_emp
+</select>
+<!-- 승진평가 대사장 리스트 전체 (부서별)-->
+<select id="promotiontestdepart" parameterType="HashMap" resultType="PromotionTestVO">
+	SELECT
+		b.dname, a.NAME , b.ID_EMP , b.duty_d , b.lev_l , b.score, a.EMAIL, a.depart, a.duty, a.lev,
+						(SELECT
+							count(*)
+						FROM
+							(select * from promotiontestRead where Id_emp_v=ID_EMP_V)
+						WHERE
+							ID_EMP_P=#{Id_emp_p})rt
+	FROM
+		INFO_EMP A,
+		(SELECT ID_EMP_V Id_emp, sum(SCORE)/4 score, lev_l, duty_d,dname 
+			FROM (SELECT * FROM EVALUATIONREAD WHERE <![CDATA[(TO_NUMBER(TO_CHAR(SYSDATE,'yyyyMM'))-TO_NUMBER(TO_CHAR(SAVEDATE,'yyyyMM'))<=200))]]>
+			GROUP BY ID_EMP_V,Lev_l,duty_d,dname
+			HAVING sum(SCORE)/4>= 75)B
+	WHERE a.ID_EMP =b.Id_emp and
+		<if test="depart != null">
+			 a.depart = #{depart}
+		</if>
+</select>
+
+<select id="promotionadmin" resultType="InfoVO">
+	select i.*, d.depart depart_d, l.lev lev_l, du.duty duty_du from Info_emp i, depart d,lev l,duty du 
+	where i.depart=d.idx and i.lev=l.idx and i.duty=du.idx and i.lev>=5
+</select>
+
+
+
+<update id="givetopromotionadmin" parameterType="int">
+	update Info_emp set temp1='평가자' where Id_emp= #{Id_emp}
+</update>
+<update id="nogivetopromotionadmin" parameterType="int">
+	update Info_emp set temp1=' ' where Id_emp= #{Id_emp}
+</update>
+
+</mapper>

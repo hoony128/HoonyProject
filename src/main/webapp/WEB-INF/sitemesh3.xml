@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 설정부분 -->
+<sitemesh>
+  <mapping path="/*" decorator="/resources/home.jsp"/>
+<!-- 설정부분 끝 -->   
+  <!-- 설정에서 제외 시킬부분 -->
+  <mapping path="/login" exclue="true"/>
+  <mapping path="/" exclue="true"/>
+  <mapping path="/resources/*" exclue="true"/>
+  <!-- 설정에서 제외 시킬부분 -->
+</sitemesh>

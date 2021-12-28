@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="history">
+
+<!-- 자신의 이력전체보기 -->
+<select id="myhistoryAll" resultType="HistoryVO" parameterType="int">
+SELECT a.ID_EMP,b.LEV lev_l, c.DEPART depart_d, d.DUTY duty_du, e.STATE state_s,a.UPDATEDATE FROM HISTORY a, LEV b, DEPART c, DUTY d, STATE e 
+WHERE a.ID_EMP=#{Id_emp}  
+	AND a.DEPART=c.IDX 
+	AND a.LEV = b.IDX
+	AND a.DUTY = d.IDX
+	AND a.STATE = e.IDX
+ORDER BY a.UPDATEDATE desc	
+	
+</select>
+
+<!-- 자신의 이력 승진보기 -->
+<select id="myhistoryPro" resultType="HistoryVO" parameterType="int">
+SELECT a.ID_EMP,b.LEV lev_l, c.DEPART depart_d, d.DUTY duty_du, e.STATE state_s,a.UPDATEDATE FROM HISTORY a, LEV b, DEPART c, DUTY d, STATE e 
+WHERE a.ID_EMP=#{Id_emp} 
+	AND a.type =1 
+	AND a.DEPART=c.IDX 
+	AND a.LEV = b.IDX
+	AND a.DUTY = d.IDX
+	AND a.STATE = e.IDX
+ORDER BY a.UPDATEDATE desc	
+</select>
+<select id="myhistoryDep" resultType="HistoryVO" parameterType="int">
+SELECT a.ID_EMP, b.LEV lev_l, c.DEPART depart_d, d.DUTY duty_du, e.STATE state_s,a.UPDATEDATE FROM HISTORY a, LEV b, DEPART c, DUTY d, STATE e 
+WHERE a.ID_EMP=#{Id_emp} 
+	AND a.type =3 
+	AND a.DEPART=c.IDX 
+	AND a.LEV = b.IDX
+	AND a.DUTY = d.IDX
+	AND a.STATE = e.IDX
+ORDER BY a.UPDATEDATE desc	
+</select>
+
+
+<!-- 전사원의 이력보기 -->
+<select id="historyAll" resultType="HistoryVO" >
+SELECT 
+	a.ID_EMP,b.LEV lev_l, c.DEPART depart_d, d.DUTY duty_du, e.STATE state_s,a.UPDATEDATE, f.name name 
+FROM 
+	HISTORY a, LEV b, DEPART c, DUTY d, STATE e, Info_emp f
+WHERE  
+	a.DEPART=c.IDX 
+	AND a.LEV = b.IDX
+	AND a.DUTY = d.IDX
+	AND f.STATE = e.IDX
+	AND a.Id_emp = f.Id_emp
+ORDER BY a.UPDATEDATE desc	
+</select>
+
+<!-- 전사원의 승진이력보기 -->
+<select id="historyPro" resultType="HistoryVO" >
+SELECT 
+	a.ID_EMP,b.LEV lev_l, g.lev afterlev, c.DEPART depart_d, d.DUTY duty_du, e.STATE state_s,a.UPDATEDATE ,f.name name
+FROM 
+	HISTORY a, LEV b, DEPART c, DUTY d, STATE e , Info_emp f,lev g
+WHERE  a.type =1 
+	AND a.DEPART=c.IDX 
+	AND a.LEV = b.IDX
+	and a.lev_after = g.idx
+	AND a.DUTY = d.IDX
+	AND f.STATE = e.IDX
+	and a.Id_emp = f.Id_emp
+ORDER BY a.UPDATEDATE DESC
+</select>
+
+<!-- 전사원의 퇴사이력보기 -->
+<select id="historyRes" resultType="HistoryVO" >
+SELECT 
+	a.ID_EMP,b.LEV lev_l, c.DEPART depart_d, d.DUTY duty_du, e.STATE state_s,a.UPDATEDATE ,f.name name
+FROM 
+	HISTORY a, LEV b, DEPART c, DUTY d, STATE e , Info_emp f
+WHERE a.type =2 
+	AND a.DEPART=c.IDX 
+	AND a.LEV = b.IDX
+	AND a.DUTY = d.IDX
+	AND f.STATE = e.IDX
+	and a.Id_emp = f.Id_emp
+ORDER BY a.UPDATEDATE desc	
+</select>
+
+
+<select id="historyDep" resultType="HistoryVO" >
+SELECT 
+	a.ID_EMP,b.LEV lev_l, c.DEPART depart_d, d.DUTY duty_du, e.STATE state_s,a.UPDATEDATE ,f.name name
+FROM 
+	HISTORY a, LEV b, DEPART c, DUTY d, STATE e, Info_emp f 
+WHERE  a.type =3 
+	AND a.DEPART=c.IDX 
+	AND a.LEV = b.IDX
+	AND a.DUTY = d.IDX
+	AND f.STATE = e.IDX
+	and a.Id_emp = f.Id_emp
+ORDER BY a.UPDATEDATE desc	
+</select>
+
+</mapper>

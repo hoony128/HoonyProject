@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="logcheck">
+
+<!-- 로그인 했을 때-->
+<insert id="insertlogin" parameterType="HashMap">
+	insert into logcheck (idx, Id_Emp, logType, ip, logDate) 
+	values(logCheck_idx_seq.nextval, #{Id_emp},1,#{ip}, sysdate)
+</insert>
+
+<!-- 로그아웃 할 때 -->
+<insert id="insertlogout" parameterType="HashMap">
+	insert into logcheck (idx, Id_Emp, logType, ip, logDate) 
+	values(logCheck_idx_seq.nextval, #{Id_emp},2,#{ip}, sysdate)
+</insert>
+
+	<!-- 전체 개수 얻기 	-->
+	<select id="getCount" resultType="int">
+		select count(*) from logcheck 
+	</select>
+	<select id="getCountIdEmp" resultType="int" parameterType="Integer">
+		select count(*) from logcheck where Id_emp =#{Id_emp}
+	</select>
+	
+	<!-- 1페이지 얻기 	-->
+	<select id="selectListLog" parameterType="java.util.HashMap" resultType="LogCheckVO">
+		select 
+			R.*
+		from
+			(select
+				rownum rnum, Q.*
+			from
+				(select 
+					* 
+				from 
+					logcheck 				
+				order by idx desc) Q
+			where
+				<![CDATA[
+				rownum <= #{endNo}) R
+				]]>
+		where
+			<![CDATA[
+			rnum >= #{startNo}
+			]]>
+	</select>
+
+	<!-- 1페이지 얻기 검색별 -->
+	<select id="selectListLogIdEmp" parameterType="java.util.HashMap" resultType="LogCheckVO">
+		select 
+			R.*
+		from
+			(select
+				rownum rnum, Q.*
+			from
+				(select 
+					* 
+				from 
+					logcheck 
+				<if test="Id_emp != null">
+				where Id_emp = #{Id_emp}  
+				</if>
+				order by idx desc) Q
+			where
+				<![CDATA[
+				rownum <= #{endNo}) R
+				]]>
+		where
+			<![CDATA[
+			rnum >= #{startNo}
+			]]>
+	</select>
+
+
+	<!-- 엑셀으로 다운 받기용!! 페이징 하지 않겠다는 의미 -->
+	<select id="excelList" resultType="LogCheckVO">
+		select 
+			* 
+		from 
+			logcheck	 				
+		order by 
+			logdate desc,idx desc
+	</select>
+	
+	<select id="excelListid" resultType="LogCheckVO" parameterType="HashMap">
+		select 
+			* 
+		from 
+			logcheck
+		<if test="Id_emp != null">
+		where 
+			Id_emp = #{Id_emp}  
+		</if>				 				
+		order by 
+			logdate desc,idx desc
+	</select>
+	
+</mapper>

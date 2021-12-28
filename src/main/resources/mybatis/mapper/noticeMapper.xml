@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="notice">
+
+<!-- 테스팅 -->
+<insert id="testing">
+INSERT INTO TESTING (idx,ref) VALUES (testing_idx_seq.nextval,3)
+</insert>
+
+
+<!-- 리스트보여주기 -->
+<select id="selectList" parameterType="HashMap" resultType="NoticeVO">
+	select 
+		R.*	
+	from
+		(select 
+			rownum rnum, Q.*
+		from 
+			(select * from notice  where type=1 order by idx desc)Q
+		where 
+			<![CDATA[rownum <= #{endNo})R ]]>
+	where 
+		rnum >= <![CDATA[ #{startNo}]]>		
+</select>
+<!-- 아이디를 통해  정보 가져오기 -->
+<select id="selectbyuserid" parameterType="int" resultType="NoticeVO">
+	select * from notice where Id_emp=#{Id_emp} and type=1
+</select>
+<!-- 한개 정보 가져오기 -->
+<select id="selectbyidx" parameterType="int" resultType="NoticeVO">
+	select * from notice where idx=#{idx} and type=1
+</select>
+<!-- 개수구하기 -->
+<select id="getCount" resultType="int" >
+	select count(*) from notice where type !=2
+</select>
+<!-- 추가 -->
+<insert id="insert" parameterType="NoticeVO">
+	INSERT INTO NOTICE (idx,Id_emp,subject,content,dname,regdate,hit,type) VALUES(notice_idx_seq.nextval,#{Id_emp},#{subject},#{content},#{dname},sysdate,0,1)
+</insert>
+
+
+<!-- 변경부분 -->
+<!-- 내용변경 -->
+<update id="update" parameterType="HashMap">
+ update notice set subject=#{subject}, content=#{content}, regdate=sysdate where idx=#{idx}
+</update>
+<!-- 수정내역 저장 -->
+<insert id="noticeCheckupdate" parameterType="HashMap">
+INSERT INTO BOARDCHECK (idx,ID_EMP,IP,BOARDTYPE,TYPE,UPDATEDATE,BOARD_IDX) 
+VALUES (boardCheck_idx_seq.nextval,#{Id_emp},#{ip},'공지사항','수정',SYSDATE,#{board_idx})
+</insert>
+
+<!-- 파일부분 -->
+<select id="getCountidxfile" resultType="int" parameterType="int">
+	select count(*) from fileupload where board_idx=#{board_idx}
+</select>
+<!-- 파일history에 저장 -->
+<insert id="filehistorysave" parameterType="HashMap">
+	insert into filehistory (idx,boardType,board_idx,ofile,sfile,savedate)
+	values(fileupload_idx_seq.nextval,'공지사항',#{board_idx},#{ofile},#{sfile},sysdate)</insert>
+<!-- 파일내역을 삭제 -->
+<delete id="filedelete" parameterType="int">
+	delete from fileupload where boardType='공지사항' and board_idx=#{board_idx}
+</delete>
+
+<!-- 삭제 - 글 목록을 안보이게 하겠다. -->
+ <update id="noticedelete" parameterType="int">
+ 	update NOTICE set type=2 where idx=#{idx}
+ </update>
+ 
+ <!-- 삭제 - 삭제했음을 기록에 남기겠다-->
+ <insert id="noticeCheckDelete" parameterType="HashMap">
+ 	INSERT INTO BOARDCHECK (idx,ID_EMP,IP,BOARDTYPE,TYPE,UPDATEDATE,BOARD_IDX) 
+	VALUES (boardCheck_idx_seq.nextval,#{Id_emp},#{ip},'공지사항','삭제',SYSDATE,#{board_idx})
+ </insert>
+ 
+<!-- 조회수 증가 -->
+<update id="hitupdate" parameterType="int">
+update NOTICE set hit=hit+1 where idx=#{idx}
+</update>
+
+<!-- idx 최고 값 가져오기! -->
+<select id="maxgetIdx" resultType="int" >
+	select max(idx) from notice
+</select>
+<!-- 파일도 저장하기! -->
+<insert id="noticeFileinsert" parameterType="FileVO">
+	insert into fileupload (idx,boardType,board_idx,ofile,sfile,savedate)
+	values(fileupload_idx_seq.nextval,'공지사항',#{board_idx},#{ofile},#{sfile},sysdate)
+</insert>
+<!-- BoardCheck에 저장! -->
+<insert id="noticeCheckInsert" parameterType="HashMap">
+INSERT INTO BOARDCHECK (idx,ID_EMP,IP,BOARDTYPE,TYPE,UPDATEDATE,BOARD_IDX) 
+VALUES (boardCheck_idx_seq.nextval,#{Id_emp},#{ip},'공지사항','등록',SYSDATE,#{board_idx})
+</insert>
+
+<!--Idx에 맞는 파일명을 부르기 -->
+<select id="fileload" resultType="FileVO" parameterType="int">
+	select * from fileupload where boardType='공지사항' and board_idx=#{board_idx}
+</select>
+
+
+
+<!-- 검색용 -->
+<!-- totalpage -->
+<select id="searchNoticeCount" parameterType="HashMap" resultType="int">
+	select 
+		count(*) 
+	from 
+		notice 
+	where 
+		type=1 
+		<if test="field != null and field !='' ">
+			and ${field} like '%${text}%' 
+		</if> 
+	 	<if test="field == null and field =='' ">
+	 		and dname like '%${text}%' or subject like '%${text}%' or content like '%${text}%'
+	 	</if>
+</select>
+
+<!-- 결과물 -->
+<select id="searchNoticeResult" parameterType="HashMap" resultType="NoticeVO">
+		select
+		 R.*
+		from
+			(select
+				rownum rnum, Q.*
+			from	
+				(select 
+					*
+				 from 
+				 	notice  
+				 where 
+				 	type=1
+				 	<if test="field !=''">
+				 	and ${field} like '%${text}%' 
+				 	</if> 
+				 	<if test="field ==''">
+				 	and (dname like '%${text}%' or subject like '%${text}%' or content like '%${text}%')
+				 	</if>
+				 order by idx desc)Q
+			<![CDATA[
+			where
+				rownum <= #{endNo}	
+			]]>)R
+		<![CDATA[
+		where
+			rnum >= #{startNo}	
+		]]>			 	
+</select>
+
+<!--  자동 삭제를 위한 mapper -->
+
+
+
+<delete id="removeNT">
+delete 
+	from 	
+		NOTICE
+	WHERE
+	idx = (SELECT
+			a.IDX
+		FROM
+			NOTICE A,
+			(select 
+				type,(TO_NUMBER(TO_CHAR(SYSDATE ,'yyyyMMdd'))- TO_NUMBER(TO_CHAR(REGDATE ,'yyyymmdd'))) dw 
+			from 
+				NOTICE 
+			where 
+				type=2 and (TO_NUMBER(TO_CHAR(SYSDATE ,'yyyyMMdd'))- TO_NUMBER(TO_CHAR(REGDATE ,'yyyyMMdd')))>=10)B
+		WHERE  a.TYPE= b.TYPE)
+</delete>
+
+
+</mapper>

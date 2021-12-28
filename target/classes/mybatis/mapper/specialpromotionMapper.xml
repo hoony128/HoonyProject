@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="specialpromotion">
+	<!-- 저장 용도 -->
+	<insert id="insertspecialpromotion" parameterType="SpecialPromotionVO">
+		insert into specialpromotion (idx, dname, name,duty,lev_now,lev_after,Id_emp,reason,type,nowlev)
+		values(specialpromotion_idx_seq.nextval,#{dname},#{name},#{duty},#{lev_now},#{lev_after},#{Id_emp},#{reason},1, ${nowlev})
+	</insert>
+	<!-- 지우고 쓰는 용도 -->
+	<insert id="insertspecialpromotionsave" parameterType="SpecialPromotionVO">
+		insert into specialpromotion (idx, dname, name,duty,lev_now,lev_after,Id_emp,reason,type,nowlev)
+		values(specialpromotion_idx_seq.nextval,#{dname},#{name},#{duty},#{lev_now},#{lev_after},#{Id_emp},#{reason},2,#{nowlev})
+	</insert>
+	
+	<!-- 특진 인사 리스트 가지고 오기 -->
+	<select id="specialpromotionList" resultType="SpecialPromotionVO">
+		SELECT 
+			a.*,b.lev,c.DEPART,c.state,c.duty duty_d 
+		FROM 
+			SPECIALPROMOTION a ,LEV b,INFO_EMP c  
+		WHERE 
+			a.ID_EMP=c.ID_EMP AND a.LEV_AFTER=b.IDX and TYPE=1	
+	</select>
+	<!-- 특진 인사 리스트 가지고 오기  부서 -->
+	<select id="specialpromotionListDep" resultType="SpecialPromotionVO" parameterType="int">
+		SELECT a.*,b.lev,c.DEPART,c.state,c.duty duty_d FROM SPECIALPROMOTION a ,LEV b,INFO_EMP c  WHERE a.ID_EMP=c.ID_EMP AND a.LEV_AFTER=b.IDX and TYPE=1 and c.depart= #{depart}	
+	</select>	
+	<!-- 레벨업 시키기~! -->
+	<update id="updateInfoLev" parameterType="HashMap">
+		update Info_emp set lev= #{lev} where 
+		<if test="Id_emp != null">Id_emp= #{Id_emp}</if>
+	</update>
+	<!-- 이력추가 -->
+	<insert id="levuphistory" parameterType="HashMap">
+		insert into history(idx,Id_emp,type,updatedate,lev,lev_after,depart,state,duty) 
+		values(history_idx_seq.nextval,<if test="Id_emp != null">#{Id_emp}</if>,1,sysdate,#{lev},#{lev_after},#{depart},1,#{duty})
+	</insert>
+	<!-- 비정기 인사테이블 정리 -->
+	<delete id="deletespecialpromotion" parameterType="int">
+		delete from specialpromotion where 
+		type=1 and Id_emp= #{Id_emp}
+	</delete>
+	
+	<!-- 철회시 타입2를 3으로 변경해주자~! (Type2는 승인성공, Type3은 승인철회) -->
+	<update id="dropspecialpromotion" parameterType="HashMap">
+		update specialpromotion set type=3 where type=2 and Id_emp=#{Id_emp} and nowlev = #{nowlev} 
+	</update>
+	
+	<!-- 전직원 명단 -->
+<select id="selectAllEmp" resultType="InfoVO">
+	select 
+		i.*, d.depart depart_d, l.lev lev_l, du.duty duty_du,
+		(SELECT COUNT(*) FROM SPECIALPROMOTION WHERE TYPE=1 AND ID_EMP=i.ID_EMP)rw  
+	from 
+		Info_emp i, depart d,lev l,duty du
+	where 
+		i.depart=d.idx and i.lev=l.idx and i.duty=du.idx and i.state=1
+</select>
+
+<!-- 부서별 임직원 정보  -->
+<select id="selectDepInfo" parameterType="java.util.HashMap" resultType="InfoVO" >
+	select 
+		i.*, d.depart depart_d, l.lev lev_l, du.duty duty_du,
+		(SELECT COUNT(*) FROM SPECIALPROMOTION WHERE TYPE=1 AND ID_EMP=i.ID_EMP)rw  
+	from 
+		Info_emp i, depart d, lev l, duty du
+	where 
+		i.depart=d.idx and i.lev=l.idx and i.duty= du.idx and i.state=1 
+		<if test="depart != null">
+		and i.depart = #{depart}
+		</if>
+</select>
+</mapper>

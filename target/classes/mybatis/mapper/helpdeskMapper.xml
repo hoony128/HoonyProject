@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="help">
+
+<!-- 리스트보여주기 -->
+<select id="helpselectList" resultType="HelpdeskVO" parameterType="HashMap">
+	select
+		Q.*
+	from	
+		(select
+			rownum rnum, R.*
+		from
+			(select * from helpdesk where type=1 order by idx desc)R
+		where
+			<![CDATA[ rownum <= #{endNo} ]]>)Q
+	where
+		<![CDATA[ rnum >= #{startNo} ]]>				
+</select>
+<!-- 한개 정보 가져오기 -->
+<select id="helpselectbyidx" resultType="HelpdeskVO" parameterType="int">
+	select * from helpdesk where idx=#{idx} and type=1
+</select>
+<!-- 아이디를 통해  정보 가져오기 -->
+<select id="helpselectbyid" resultType="HelpdeskVO" parameterType="int">
+	select * from helpdesk where Id_emp=#{Id_emp} and type=1
+</select>
+<!-- 개수구하기 -->
+<select id="helpgetCountTotal" resultType="int">
+	select count(*) from helpdesk where type=1
+</select>
+
+<!-- 추가 -->
+<insert id="insertHelpDesk" parameterType="HelpdeskVO">
+	Insert into helpdesk (idx,Id_emp,subject,content,dname,regdate,hit,type,name,lev)
+	values(helpdesk_idx_seq.nextval, #{Id_emp}, #{subject}, #{content}, #{dname}, sysdate, 0, 1, #{name}, #{lev})
+</insert>
+<!-- idx 최고 값 가져오기! -->
+<select id="helpdeskmaxgetIdx" resultType="int">
+	select max(idx) from helpdesk
+</select>
+<!-- 파일도 저장하기! -->
+<insert id="helpFileinsert" parameterType="FileVO">
+	insert into fileupload (idx,boardType,board_idx,ofile,sfile,savedate)
+	values(fileupload_idx_seq.nextval,'업무도움방',#{board_idx},#{ofile},#{sfile},sysdate)
+</insert>
+<!-- BoardCheck에 저장! -->
+<insert id="helpCheckInsert" parameterType="HashMap">
+INSERT INTO BOARDCHECK (idx,ID_EMP,IP,BOARDTYPE,TYPE,UPDATEDATE,BOARD_IDX) 
+VALUES (boardCheck_idx_seq.nextval,#{Id_emp},#{ip},'업무도움방','등록',SYSDATE,#{board_idx})
+</insert>
+<!-- VIEW -->
+<!-- 조회수 증가 -->
+<update id="hitupdate" parameterType="int">
+	update helpdesk set hit= hit+1 where idx=#{idx}
+</update>
+<!-- Idx에 맞는 파일명을 부르기 -->
+<select id="fileload" resultType="FileVO" parameterType="int">
+	select * from fileupload where boardType='업무도움방' and board_idx=#{board_idx}
+</select>
+
+
+
+<!-- 변경부분 -->
+<!-- 내용 변경 -->
+<update id="update" parameterType="HashMap">
+ update helpdesk set subject=#{subject}, content=#{content}, regdate=sysdate where idx=#{idx}
+</update>
+<!-- 수정내역을 저장! -->
+<insert id="helpCheckupdate" parameterType="HashMap">
+INSERT INTO BOARDCHECK (idx,ID_EMP,IP,BOARDTYPE,TYPE,UPDATEDATE,BOARD_IDX) 
+VALUES (boardCheck_idx_seq.nextval,#{Id_emp},#{ip},'업무도움방','수정',SYSDATE,#{board_idx})
+</insert>
+
+<!-- 파일부분 -->
+<!-- 파일 내역을 부르는 것 -->
+<!-- flist 판단을 위한 장치 -->
+<select id="getCountidxfile" resultType="int" parameterType="int">
+	select count(*) from fileupload where board_idx=#{board_idx}
+</select>
+
+<!-- 파일history에 저장 -->
+<insert id="filehistorysave" parameterType="HashMap">
+	insert into filehistory (idx,boardType,board_idx,ofile,sfile,savedate)
+	values(fileupload_idx_seq.nextval,'업무도움방',#{board_idx},#{ofile},#{sfile},sysdate)</insert>
+<!-- 파일내역을 삭제 -->
+<delete id="filedelete" parameterType="int">
+	delete from fileupload where boardType='업무도움방' and board_idx=#{board_idx}
+</delete>
+<!-- 내용변경부분 -->
+
+<!-- 삭제부분 -->
+<!-- 삭제 - 글 목록을 안보이게 하겠다. -->
+ <update id="helpdeskdelete" parameterType="int">
+ 	update helpdesk set type=2 where idx=#{idx}
+ </update>
+<!-- 삭제 - 삭제했음을 기록에 남기겠다-->
+ <insert id="helpdeskCheckDelete" parameterType="HashMap">
+ 	INSERT INTO BOARDCHECK (idx,ID_EMP,IP,BOARDTYPE,TYPE,UPDATEDATE,BOARD_IDX) 
+	VALUES (boardCheck_idx_seq.nextval,#{Id_emp},#{ip},'업무도움방','삭제',SYSDATE,#{board_idx})
+ </insert>
+ 
+ 
+ <!-- #############댓글!############### -->
+ <!-- 댓글 목록 -->
+ <select id="helpcommentList" resultType="HelpcommentVO" parameterType="int">
+ 	select * from helpcomment where type=1 and helpdesk_idx= #{helpdesk_idx}
+ </select>
+ 
+ <!-- 댓글 갯수 -->
+ <select id="helpcommentcount" resultType="int" parameterType="int">
+ 	select count(*) from helpcomment where type=1 and helpdesk_idx= #{helpdesk_idx} 
+ </select>
+ 
+ <!-- 댓글 추가 -->
+ <insert id="helpcommentInsert" parameterType="HelpcommentVO">
+ 	insert into helpcomment (idx,helpdesk_idx,Id_emp,name,dname,lev,subject,regdate,type)
+ 	values(helpcomment_idx_seq.nextval,#{helpdesk_idx},#{Id_emp},#{name},#{dname},#{lev},#{subject},sysdate,1)
+ </insert>
+ 
+ <!-- 댓글 삭제 -->
+ <update id="helpcommentdelete" parameterType="int">
+ 	update helpcomment set type=2 where idx=#{idx}
+ </update>
+ 
+ 
+ <!-- 검색용 -->
+<!-- totalpage -->
+<select id="searchHDCount" parameterType="HashMap" resultType="int">
+	select 
+		count(*) 
+	from 
+		Helpdesk 
+	where 
+		type=1 
+		<if test="field != null and field !='' ">
+			and ${field} like '%${text}%' 
+		</if> 
+	 	<if test="field == null and field =='' ">
+	 		and (name like '%${text}%'  or dname like '%${text}%' or subject like '%${text}%' or content like '%${text}%')
+	 	</if>
+</select>
+
+<!-- 결과물 -->
+<select id="searchHDResult" parameterType="HashMap" resultType="HelpdeskVO">
+		select
+		 R.*
+		from
+			(select
+				rownum rnum, Q.*
+			from	
+				(select 
+					*
+				 from 
+				 	Helpdesk  
+				 where 
+				 	type=1
+				 	<if test="field !=''">
+				 	and ${field} like '%${text}%' 
+				 	</if> 
+				 	<if test="field ==''">
+				 	and (name like '%{text}%' or dname like '%${text}%' or subject like '%${text}%' or content like '%${text}%')
+				 	</if>
+				 order by idx desc)Q
+			<![CDATA[
+			where
+				rownum <= #{endNo}	
+			]]>)R
+		<![CDATA[
+		where
+			rnum >= #{startNo}	
+		]]>			 	
+</select>
+ 
+ 
+</mapper>

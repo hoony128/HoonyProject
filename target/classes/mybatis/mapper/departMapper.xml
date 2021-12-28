@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="depart">
+
+<insert id="insertdept" parameterType="String">
+	insert into depart (idx, depart) values(depart_idx_seq.nextval, #{depart})
+</insert>
+
+<update id="updatedept" parameterType="HashMap">
+	update depart set depart = #{depart} where idx= #{idx}
+</update>
+
+<delete id="deletedept" parameterType="int">
+	delete from depart  where idx = #{idx}
+</delete>
+
+<!-- 페이지 얻기 -->
+<select id="selectAll" resultType="DepartVO">
+	select * from depart
+</select>
+
+
+</mapper>

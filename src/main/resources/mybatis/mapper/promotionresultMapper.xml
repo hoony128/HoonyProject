@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="promotionresult">
+
+<!-- 평가후 바로 저장!(비교용) -->
+<insert id="submitResult" parameterType="PromotionResultVO">
+	insert into promotiontestRead (idx, Id_emp_p, name_p, dname, lev_l, duty_d, Id_emp_v, name_v, testscore1, testscore2, testscore3, testscore4, type)
+	values(promotiontestRead_idx_seq.nextval, #{Id_emp_p}, #{name_p}, #{dname}, #{lev_l}, #{duty_d}, #{Id_emp_v}, #{name_v},  #{testscore1},
+	#{testscore2}, #{testscore3}, #{testscore4},1)
+</insert>
+
+<!-- 평가후 바로 저장!(저장용) -->
+<insert id="saveResult" parameterType="PromotionResultVO">
+	insert into promotiontestsave (idx, Id_emp_p, name_p, dname, lev_l, duty_d, Id_emp_v, name_v, testscore1, testscore2, testscore3, testscore4)
+	values(promotiontestsave_idx_seq.nextval, #{Id_emp_p}, #{name_p}, #{dname}, #{lev_l}, #{duty_d}, #{Id_emp_v}, #{name_v},  #{testscore1},
+	#{testscore2}, #{testscore3}, #{testscore4})
+</insert>
+
+<!-- 인사팀 확인하는 곳 -->
+<select id="selectResultList" resultType="PromotionResultVO">
+	select * from promotiontestRead where type=1
+</select>
+
+
+
+<!-- 인사팀이 확인한 결과 모든 사람이 평가를 마치면 평가종료를 누른다. -->
+<!-- 인사팀이 평가종료를 누르면 타입 1을 타입2로 바꿔준다. -->
+<update id="updateType">
+	update promotiontestRead set type=2 where type=1
+</update>
+
+
+
+
+<select id="getCountsbmit" resultType="int" parameterType="HashMap">
+	select count(*) from promotiontestRead where Id_emp_p=${Id_emp_p} and Id_emp_v=#{Id_emp_v}
+</select>
+
+<!-- 정기 승진 결과 1.. 전체사원 -->
+<select id="findTestResultall" resultType="PromotionTestVO">
+	SELECT
+		d.DNAME, d.ID_EMP,d.name ,d.score, c.testscore,((d.score*0.45)+(c.testscore*0.55))Finalscore,d.lev_l,d.DUTY_D,d.lev,d.depart,d.duty,d.state
+	FROM<!-- 
+		(SELECT ID_EMP_V,type,<![CDATA[((sum(TESTSCORE1)+sum(TESTSCORE2)+sum(TESTSCORE3)+sum(TESTSCORE4))/4 )testscore]]> FROM PROMOTIONTESTREAD GROUP BY ID_EMP_V,Type Having type=2)C,
+		 -->
+		 (SELECT ID_EMP_V,type,((sum(TESTSCORE1)+sum(TESTSCORE2)+sum(TESTSCORE3)+sum(TESTSCORE4)) )testscore FROM PROMOTIONTESTREAD GROUP BY ID_EMP_V,Type Having type=2)C, 
+		(SELECT
+			b.dname, a.NAME , b.ID_EMP , b.duty_d , b.lev_l , b.score, a.lev, a.depart,a.duty,a.state
+		FROM
+			INFO_EMP A,
+				<![CDATA[(SELECT ID_EMP_V Id_emp, sum(SCORE)/4 score, lev_l, duty_d,dname]]>
+				FROM (SELECT * FROM EVALUATIONREAD WHERE <![CDATA[(TO_NUMBER(TO_CHAR(SYSDATE,'yyyyMM'))-TO_NUMBER(TO_CHAR(SAVEDATE,'yyyyMM'))<200))]]>
+				GROUP BY ID_EMP_V,Lev_l,duty_d,dname
+				<![CDATA[HAVING sum(SCORE)/4>= 75)B]]>	
+		WHERE a.state=1 and a.ID_EMP =b.Id_emp)D 	
+	<![CDATA[WHERE c.ID_EMP_V=d.ID_EMP]]>
+	ORDER BY finalscore desc
+</select>
+<!-- 정기 승진 결과 2.. 승진대상 -->
+<select id="findTestResultsuc" resultType="PromotionTestVO">
+	SELECT
+		d.DNAME, d.ID_EMP,d.name ,d.score, c.testscore,((d.score*0.45)+(c.testscore*0.55))Finalscore,d.lev_l,d.DUTY_D,d.lev,d.depart,d.duty,d.state
+	FROM<!-- 
+		(SELECT ID_EMP_V,type,<![CDATA[((sum(TESTSCORE1)+sum(TESTSCORE2)+sum(TESTSCORE3)+sum(TESTSCORE4))/4)testscore]]> FROM PROMOTIONTESTREAD GROUP BY ID_EMP_V,Type Having type=2)C,
+	 -->
+	 	(SELECT ID_EMP_V,type, ((sum(TESTSCORE1)+sum(TESTSCORE2)+sum(TESTSCORE3)+sum(TESTSCORE4)))testscore FROM PROMOTIONTESTREAD GROUP BY ID_EMP_V,Type Having type=2)C, 
+		(SELECT
+			b.dname, a.NAME , b.ID_EMP , b.duty_d , b.lev_l , b.score, a.lev, a.depart,a.duty,a.state
+		FROM
+			INFO_EMP A,
+				<![CDATA[(SELECT ID_EMP_V Id_emp, sum(SCORE)/4 score, lev_l, duty_d,dname]]>
+				FROM (SELECT * FROM EVALUATIONREAD WHERE <![CDATA[(TO_NUMBER(TO_CHAR(SYSDATE,'yyyyMM'))-TO_NUMBER(TO_CHAR(SAVEDATE,'yyyyMM'))<200))]]>
+				GROUP BY ID_EMP_V,Lev_l,duty_d,dname
+				<![CDATA[HAVING sum(SCORE)/4>= 75)B]]>	
+		WHERE <!--   a.state=1 and--> a.ID_EMP =b.Id_emp)D 	
+	<![CDATA[WHERE ((d.score*0.45)+(c.testscore*0.55))>=80 and c.ID_EMP_V=d.ID_EMP]]>
+	ORDER BY finalscore desc
+</select>
+<!-- 정기 승진 결과 3.. 승진실패 -->
+<select id="findTestResultfail" resultType="PromotionTestVO">
+	SELECT
+		d.DNAME, d.ID_EMP,d.name ,d.score, c.testscore,((d.score*0.45)+(c.testscore*0.55))Finalscore,d.lev_l,d.DUTY_D,d.lev,d.depart,d.duty,d.state
+	FROM
+		<!-- 
+		(SELECT ID_EMP_V,type,<![CDATA[((sum(TESTSCORE1)+sum(TESTSCORE2)+sum(TESTSCORE3)+sum(TESTSCORE4))/4)testscore]]> FROM PROMOTIONTESTREAD GROUP BY ID_EMP_V,Type Having type=2)C,
+		 -->
+		 (SELECT ID_EMP_V,type,((sum(TESTSCORE1)+sum(TESTSCORE2)+sum(TESTSCORE3)+sum(TESTSCORE4)))testscore FROM PROMOTIONTESTREAD GROUP BY ID_EMP_V,Type Having type=2)C, 
+		(SELECT
+			b.dname, a.NAME , b.ID_EMP , b.duty_d , b.lev_l , b.score, a.lev, a.depart,a.duty,a.state
+		FROM
+			INFO_EMP A,
+				<![CDATA[(SELECT ID_EMP_V Id_emp, sum(SCORE)/4 score, lev_l, duty_d,dname]]>
+				FROM (SELECT * FROM EVALUATIONREAD WHERE <![CDATA[(TO_NUMBER(TO_CHAR(SYSDATE,'yyyyMM'))-TO_NUMBER(TO_CHAR(SAVEDATE,'yyyyMM'))<200))]]>
+				GROUP BY ID_EMP_V,Lev_l,duty_d,dname
+				<![CDATA[HAVING sum(SCORE)/4>= 75)B]]>	
+		WHERE <!--   a.state=1 and-->  a.ID_EMP =b.Id_emp)D 	
+	<![CDATA[WHERE ((d.score*0.45)+(c.testscore*0.55))<80 and c.ID_EMP_V=d.ID_EMP]]>
+	ORDER BY finalscore desc
+</select>
+
+
+<!-- 정기 승진 결과 2.. 승진대상 -->
+<select id="findTestResultsucDepart" resultType="PromotionTestVO" parameterType="int">
+	SELECT
+		d.DNAME, d.ID_EMP,d.name ,d.score, c.testscore,((d.score*0.45)+(c.testscore*0.55))Finalscore,d.lev_l,d.DUTY_D,d.lev,d.depart,d.duty,d.state
+	FROM 
+		<!-- 
+		(SELECT ID_EMP_V,type,<![CDATA[((sum(TESTSCORE1)+sum(TESTSCORE2)+sum(TESTSCORE3)+sum(TESTSCORE4))/4)testscore]]> FROM PROMOTIONTESTREAD GROUP BY ID_EMP_V,Type Having type=2)C,
+		 -->		
+		(SELECT ID_EMP_V,type,((sum(TESTSCORE1)+sum(TESTSCORE2)+sum(TESTSCORE3)+sum(TESTSCORE4)))testscore FROM PROMOTIONTESTREAD GROUP BY ID_EMP_V,Type Having type=2)C,
+		(SELECT
+			b.dname, a.NAME , b.ID_EMP , b.duty_d , b.lev_l , b.score, a.lev, a.depart,a.duty,a.state
+		FROM
+			INFO_EMP A,
+				<![CDATA[(SELECT ID_EMP_V Id_emp, sum(SCORE)/4 score, lev_l, duty_d,dname]]>
+				FROM (SELECT * FROM EVALUATIONREAD WHERE <![CDATA[(TO_NUMBER(TO_CHAR(SYSDATE,'yyyyMM'))-TO_NUMBER(TO_CHAR(SAVEDATE,'yyyyMM'))<200))]]>
+				GROUP BY ID_EMP_V,Lev_l,duty_d,dname
+				<![CDATA[HAVING sum(SCORE)/4>= 75)B]]>	
+		WHERE   a.state=1 and a.ID_EMP =b.Id_emp)D 	
+	<![CDATA[WHERE ((d.score*0.45)+(c.testscore*0.55))>=80 and c.ID_EMP_V=d.ID_EMP and d.DNAME=#{depart}]]>
+	ORDER BY finalscore desc
+</select>
+
+
+
+<!-- 레벨업 -->
+<update id="updatelevInfo" parameterType="int">
+	update info_emp set lev=lev+1 where id_emp=#{id_emp}
+</update>
+<!-- 이력추가 -->
+<insert id="levuphistory" parameterType="HashMap">
+	insert into history(idx,Id_emp,type,updatedate,lev,lev_after,depart,state,duty) 
+	values(history_idx_seq.nextval,<if test="Id_emp != null">#{Id_emp}</if>,1,sysdate,#{lev},#{lev}+1,#{depart},#{state},#{duty})
+</insert>
+<!-- 평가뷰는 초기화 -->
+<delete id="deletepromotionread" >
+ 	delete from promotiontestread
+</delete>
+<!-- 승진하였으므로 인사고과는 초기화 -->
+<delete id="deleteevalationread" parameterType="int" >
+ 	delete from EVALUATIONREAD where Id_emp_v= #{Id_emp}
+</delete>
+<!-- 평가자 권한 회수 -->
+<update id="updateadmininfo">
+	update Info_emp set temp1=' '
+</update>
+</mapper>

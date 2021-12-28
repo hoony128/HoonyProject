@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="resignation">
+<!-- 부서별 인원정보 가져오기! -->
+<select id="selectDepInfo" parameterType="java.util.HashMap" resultType="InfoVO" >
+	select 
+		i.*, d.depart depart_d, l.lev lev_l, du.duty duty_du,
+		(select count(*) from resignation where type=2 and Id_emp_v=i.Id_emp) rw 
+	from 
+		Info_emp i, depart d,lev l,duty du 
+	where 
+		i.state=1 and i.depart = d.idx and i.lev =l.idx and i.duty =du.idx and
+		<if test="depart != null">
+			 i.depart = #{depart}
+		</if>		
+</select>
+
+
+<!-- 임시저장된 거 불러오기 -->
+<select id="selectId_emp_v" resultType="ResignationVO" parameterType="int">
+	select * from resignation where  Id_emp_v=#{Id_emp_v} and  type=1
+</select>
+
+<!-- 퇴사 요청을 최종제출에한  글이 몇개 있는지 -->
+<select id="getCountSubmit" resultType="int" parameterType="int">
+	select count(*) from resignation where type=2 and Id_emp_v=#{Id_emp_v}
+</select>
+
+<!-- 임시 저장해주는 것 -->
+<insert id="resignationtempsave" parameterType="ResignationVO">
+	insert into resignation (idx,Id_emp_p,name_p,reason,Id_emp_v,name_v,savedate,dname,duty_d,lev_l,duty,lev,type) 
+	values
+	(resignation_idx_seq.nextval,#{Id_emp_p},#{name_p},#{reason},#{Id_emp_v},#{name_v},sysdate,#{dname},#{duty_d},#{lev_l},#{duty},#{lev},1)
+</insert>
+
+<!-- 임시저장 후 그 이전의 임시저장은 날려주는 것 -->
+<delete id="tempdelete" parameterType="int">
+	delete from resignation where type=1 and Id_emp_v=#{Id_emp_v}
+</delete>
+
+<!-- 보고에 저장하기!-->
+<insert id="resignationviewsave" parameterType="ResignationVO">
+	insert into resignation (idx,Id_emp_p,name_p,reason,Id_emp_v,name_v,savedate,dname,duty_d,lev_l,duty,lev,type) 
+	values
+	(resignation_idx_seq.nextval,#{Id_emp_p},#{name_p},#{reason},#{Id_emp_v},#{name_v},sysdate,#{dname},#{duty_d},#{lev_l},#{duty},#{lev},2)
+</insert>
+
+<!-- 퇴사자 전체 불러오기 -->
+<select id="resignListAll" resultType="ResignationVO">
+	SELECT a.*,b.STATE
+	FROM RESIGNATION A, INFO_EMP B
+	WHERE a.ID_EMP_V = b.ID_EMP AND a.TYPE=2
+</select>
+
+<!-- 퇴사자 부서별 불러오기 -->
+<select id="resignListDep" resultType="ResignationVO" parameterType="int">
+	SELECT a.*,b.STATE
+	FROM RESIGNATION A, INFO_EMP B
+	WHERE a.ID_EMP_V = b.ID_EMP AND a.TYPE=2 and depart=#{depart}
+</select>
+
+<!-- 보여진거 지우기! -->
+<delete id="viewdelete" parameterType="int" >
+	delete from resignation where type=2 and Id_emp_v=#{Id_emp_v}
+</delete>
+<!-- 승인요청으로 저장하기!-->
+<insert id="resignationapproval" parameterType="ResignationVO">
+	insert into resignation (idx,Id_emp_p,name_p,reason,Id_emp_v,name_v,savedate,dname,duty_d,lev_l,duty,lev,type) 
+	values
+	(resignation_idx_seq.nextval,#{Id_emp_p},#{name_p},#{reason},#{Id_emp_v},#{name_v},sysdate,#{dname},#{duty_d},#{lev_l},#{duty},#{lev},3)
+</insert>
+<!-- 저장용으로 저장하기!-->
+<insert id="resignationonlysave" parameterType="HashMap">
+	insert into resignation (idx,Id_emp_p,name_p,reason,Id_emp_v,name_v,savedate,dname,duty_d,lev_l,duty,lev,type) 
+	values
+	(resignation_idx_seq.nextval,#{Id_emp_p},#{name_p},#{reason},#{Id_emp_v},#{name_v},sysdate,#{dname},#{duty_d},#{lev_l},#{duty},#{lev},4)
+</insert>
+
+
+<!-- 퇴사자 전체 불러오기(승인) -->
+<select id="resignListApprovalAll" resultType="ResignationVO">
+	SELECT a.*,b.STATE,b.depart
+	FROM RESIGNATION A, INFO_EMP B
+	WHERE a.ID_EMP_V = b.ID_EMP AND a.TYPE=3
+</select>
+
+<!-- 퇴사자 부서별 불러오기 (승인)-->
+<select id="resignListApprovalDep" resultType="ResignationVO" parameterType="int">
+	SELECT a.*,b.STATE,b.depart
+	FROM RESIGNATION A, INFO_EMP B
+	WHERE a.ID_EMP_V = b.ID_EMP AND a.TYPE=3 and depart=#{depart}
+</select>
+
+<!-- 이력추가 -->
+<insert id="insertHistory" parameterType="HashMap">
+	insert into history (idx,Id_emp,type,updatedate,lev,depart,state,duty,lev_after)
+	values(History_idx_seq.nextval,#{Id_emp},2,sysdate,#{lev},#{depart},3,#{duty},#{lev})
+</insert>
+
+<!-- 상태변경 -->
+<update id="updateInfoState" parameterType="int">
+	update Info_emp set state=2 where Id_emp=#{Id_emp}
+</update>
+
+<!-- 승인된거는 지우기 -->
+<delete id="deleteapproval" parameterType="int">
+	delete from RESIGNATION where type=3 and Id_emp_v=#{Id_emp_v}
+</delete>
+
+
+<!-- 인사부에서 승인을 거절했을때 타입을 98로 만들기!-->
+<update id="resignerNo" parameterType="int">
+	update RESIGNATION set type= 98  where Id_emp_v=#{Id_emp_v}
+</update>
+
+<!-- 사장이 퇴사를 거부했을 때 타입을 99로 만들기 -->
+<update id="resigneApprovalNo" parameterType="int">
+	update RESIGNATION set type= 99  where Id_emp_v=#{Id_emp_v}
+</update>
+
+
+
+</mapper>

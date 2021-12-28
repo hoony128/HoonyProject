@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="evaluation">
+
+<!-- 최종제출(All데이터용)! -->
+<insert id="insertEvaluation" parameterType="EvaluationVO">
+	insert into evaluation (idx, Id_emp_p, name_p, score, reason, Id_emp_v, name_v,dname,duty,lev,duty_d,lev_l,savedate)
+	values(evaluation_idx_seq.nextval, #{Id_emp_p}, #{name_p}, #{score}, #{reason}, #{Id_emp_v}, #{name_v},
+	#{dname},#{duty},#{lev},#{duty_d},#{lev_l}, sysdate)</insert>
+<!-- 최종제출(읽을 부분만)! -->
+<insert id="insertEvaluationread" parameterType="EvaluationVO">
+	insert into evaluationread (idx, Id_emp_p, name_p, score, reason, Id_emp_v, name_v,dname,duty,lev,duty_d,lev_l,savedate)
+	values(evaluationread_idx_seq.nextval, #{Id_emp_p}, #{name_p}, #{score}, #{reason}, #{Id_emp_v}, #{name_v},
+	#{dname},#{duty},#{lev},#{duty_d},#{lev_l}, sysdate)</insert>
+
+<!-- 부서별 인원정보 가져오기! -->
+<select id="selectDepInfo" parameterType="java.util.HashMap" resultType="InfoVO" >
+	select 
+		i.*, d.depart depart_d, l.lev lev_l, du.duty duty_du,
+		(select count(*) from evaluationread where Id_emp_v=i.ID_EMP and (TO_CHAR(SAVEDATE,'yyyy-MM') = TO_CHAR(SYSDATE,'yyyy-MM'))) rw 
+	from 
+		Info_emp i, depart d,lev l,duty du 
+	where 
+		i.state=1 and i.depart = d.idx and i.lev =l.idx and i.duty =du.idx and i.duty !=3 and
+		<if test="depart != null">
+			 i.depart = #{depart}
+		</if>		
+</select>
+
+
+<!-- 저장테이블에 저장하기 -->
+<insert id="insertEvaluationsave"  parameterType="EvaluationSaveVO">
+	insert into evaluationsave (idx, Id_emp_p, name_p, score, reason, Id_emp_v, name_v,dname,duty,lev,duty_d,lev_l)
+	values(evaluationsave_idx_seq.nextval, #{Id_emp_p}, #{name_p}, #{score}, #{reason}, #{Id_emp_v}, #{name_v},
+	#{dname},#{duty},#{lev},#{duty_d},#{lev_l})
+</insert>
+
+<!-- 저장테이블에 해당사원의 글이 몇개 있는지 -->
+<select id="getCountEvaluationsave" resultType="int" parameterType="int">
+	select count(*) from evaluationsave where Id_emp_v=#{Id_emp_v}
+</select>
+
+<!-- 임시저장테이블에 입력이 들어오면 지우기! -->
+<delete id="deleteEvaluationsave" parameterType="int">
+	delete from evaluationsave where Id_emp_v=#{Id_emp_v}
+</delete>
+
+
+<select id="selectId_emp_v" resultType="EvaluationSaveVO" parameterType="int" >
+	select * from evaluationsave where Id_emp_v=#{Id_emp_v}
+</select>
+
+
+<!-- 최종제출 됬는지 확인하기 -->
+<select id="getCountSubmit" resultType="int" parameterType="int">
+	select count(*) from evaluationread where Id_emp_v=#{Id_emp_v} and (TO_CHAR(SAVEDATE,'yyyy-MM') = TO_CHAR(SYSDATE,'yyyy-MM'))
+</select>
+
+<!-- 인사고과 미등록 사원 조회 -->
+<select id="findevaluation" resultType="InfoVO">
+SELECT B.DEPART depart_d ,A.ID_EMP, c.LEV lev_l,A.NAME 
+FROM INFO_EMP A, DEPART B, LEV c 
+WHERE a.state=1 and a.LEV=c.IDX and a.DEPART=b.IDX and ID_EMP NOT IN (SELECT ID_EMP_V FROM EVALUATIONREAD WHERE  (TO_CHAR(SAVEDATE,'yyyy-MM') = TO_CHAR(SYSDATE,'yyyy-MM')) GROUP BY ID_EMP_V)AND a.DUTY !=3
+</select>
+<!-- 인사고과 미등록 사원 부서별 조회 -->
+<select id="findevaluationDep" resultType="InfoVO" parameterType="int">
+SELECT 
+	B.DEPART depart_d ,A.ID_EMP, c.LEV lev_l,A.NAME 
+FROM 
+	INFO_EMP A, DEPART B, LEV c 
+WHERE 
+	a.state=1 and
+	a.LEV=c.IDX and a.DEPART=b.IDX 
+	and ID_EMP NOT IN (SELECT ID_EMP_V FROM EVALUATIONREAD WHERE  (TO_CHAR(SAVEDATE,'yyyy-MM') = TO_CHAR(SYSDATE,'yyyy-MM')) GROUP BY ID_EMP_V)
+	AND a.DUTY !=3
+	AND a.DEPART=#{depart}
+</select>
+
+
+<!--  -->
+
+</mapper>

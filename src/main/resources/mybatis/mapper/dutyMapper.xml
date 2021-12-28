@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="duty">
+
+<insert id="insertDuty" parameterType="String">
+	insert into duty (idx, duty) values(duty_idx_seq.nextval, #{duty})
+</insert>
+<update id="updateDuty" parameterType="HashMap">
+	update duty set duty=#{duty} where idx=#{idx}
+</update>
+<delete id="deleteDuty" parameterType="int">
+	delete from duty  where idx = #{idx}
+</delete>
+<!-- 페이지 얻기 -->
+<select id="selectAll" resultType="DutyVO">
+	select * from duty order by idx
+</select>
+
+
+</mapper>

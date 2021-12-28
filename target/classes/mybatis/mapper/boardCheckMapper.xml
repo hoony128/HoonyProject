@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="boardcheck">
+
+<select id="boardtype" resultType="BoardCheckVo">
+	SELECT BOARDTYPE FROM BOARDCHECK GROUP BY BOARDTYPE	
+</select>
+
+<select id="typeselect" resultType="BoardCheckVo" parameterType="String">
+	SELECT 
+		TYPE 
+	FROM 
+		BOARDCHECK 
+	WHERE 
+		BOARDTYPE = #{boardtype} 
+	GROUP BY TYPE
+</select>
+
+<select id="boardCheckSearch" resultType="BoardCheckVO" parameterType="HashMap">
+	SELECT 
+		* 
+	FROM 
+		BOARDCHECK 
+	WHERE 
+		BOARDTYPE = #{boardtype} 
+		<if test="type != null and type !='' ">
+		AND TYPE =#{type}
+		</if>
+	order by updatedate desc		
+</select>
+
+<select id="boarCehckSearchAll" resultType="BoardCheckVO">
+	select * from BOARDCHECK order by updatedate desc
+</select>
+
+</mapper>

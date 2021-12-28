@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="hirestate">
+
+<insert id="insertHirestate" parameterType="String">
+	insert into hirestate (idx, hirestate) values(hirestate_idx_seq.nextval, #{hirestate})
+</insert>
+<update id="updateHirestate" parameterType="HashMap">
+	update hirestate set hirestate=#{hirestate} where idx=#{idx}
+</update>
+<delete id="deleteHirestate" parameterType="int">
+	delete from hirestate  where idx = #{idx}
+</delete>
+<!-- 페이지 얻기 -->
+<select id="selectAll" resultType="HirestateVO">
+	select * from hirestate order by idx
+</select>
+
+
+</mapper>

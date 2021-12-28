@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="state">
+
+<insert id="insertState" parameterType="String">
+	insert into state (idx, state) values(state_idx_seq.nextval, #{state})
+</insert>
+<update id="updateState" parameterType="HashMap">
+	update state set state=#{state} where idx=#{idx}
+</update>
+<delete id="deleteState" parameterType="int">
+	delete from state where idx = #{idx}
+</delete>
+<!-- 페이지 얻기 -->
+<select id="selectAll" resultType="StateVO">
+	select * from state order by idx
+</select>
+
+
+</mapper>

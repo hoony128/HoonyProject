@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="anonymous">
+
+<!-- 리스트보여주기 -->
+<select id="AnoselectList" resultType="AnonymousVO" parameterType="HashMap">
+	select
+		Q.*
+	from
+		(select
+			rownum rnum, R.*
+		from
+			(select * from anonymous where type=1 order by idx desc)R
+		where
+			<![CDATA[rownum <= #{endNo}]]>)Q
+	where
+		<![CDATA[rnum >= #{startNo}]]>		
+</select>
+<!-- 한개 정보 가져오기 -->
+<select id="Anoselectbyidx" resultType="AnonymousVO" parameterType="int">
+	select * from anonymous where type=1 and idx=#{idx}
+</select>
+<!-- 아이디를 통해  정보 가져오기 -->
+<select id="Anoselectbyid" resultType="AnonymousVO" parameterType="int">
+	select * from anonymous where type=1 and id=#{id}
+</select>
+<!-- 개수구하기 -->
+<select id="AnogetCount" resultType="int">
+	select count(*) from anonymous where type=1
+</select>
+
+<!-- 조회수 증가 -->
+<update id="hitupdate" parameterType="int">
+	update anonymous set hit=hit+1 where type=1 and idx=#{idx}
+</update>
+
+<!-- 최대값 -->
+<select id="maxidx" resultType="int">
+	select max(idx) from anonymous
+</select>
+
+<!-- 추가 -->
+<insert id="insert" parameterType="AnonymousVO">
+INSERT INTO ANONYMOUS (idx,ID,PASSWORD,SUBJECT,CONTENT,REGDATE,TYPE,HIT) 
+VALUES (anonymous_idx_seq.nextval,#{id},#{password},#{subject},#{content},SYSDATE,1,0)
+</insert>
+<!-- BoardCheck에 저장! -->
+<insert id="CheckInsert" parameterType="HashMap">
+INSERT INTO BOARDCHECK (idx,ID_EMP,IP,BOARDTYPE,TYPE,UPDATEDATE,BOARD_IDX) 
+VALUES (boardCheck_idx_seq.nextval,#{Id_emp},#{ip},'익명게시판','등록',SYSDATE,#{board_idx})
+</insert>
+
+<!-- 비밀번호 가져오기 -->
+<select id="getPassword" resultType="String" parameterType="int">
+	select password from ANONYMOUS where idx=#{idx}
+</select>
+
+<!-- 변경 -->
+<update id="update" parameterType="HashMap">
+update ANONYMOUS set subject = #{subject}, content = #{content}, regdate =sysdate where idx=#{idx}
+</update>
+<!-- 변경 기록에 저장 -->
+<insert id="CheckUpdate" parameterType="HashMap">
+INSERT INTO BOARDCHECK (idx,ID_EMP,IP,BOARDTYPE,TYPE,UPDATEDATE,BOARD_IDX) 
+VALUES (boardCheck_idx_seq.nextval,#{Id_emp},#{ip},'익명게시판','변경',SYSDATE,#{board_idx})
+</insert>
+
+<!-- 삭제 - 글 목록을 안보이게 하겠다. -->
+<update id="delete" parameterType="int">
+update ANONYMOUS set type = 2 where idx = #{idx}
+</update>
+<!-- 삭제 - 삭제했음을 기록에 남기겠다-->
+<insert id="CheckDelete" parameterType="HashMap">
+INSERT INTO BOARDCHECK (idx,ID_EMP,IP,BOARDTYPE,TYPE,UPDATEDATE,BOARD_IDX) 
+VALUES (boardCheck_idx_seq.nextval,#{Id_emp},#{ip},'익명게시판','삭제',SYSDATE,#{board_idx})
+</insert>
+
+ 
+ 
+ <!-- #############댓글!############### -->
+ <!-- 댓글 목록 -->
+	 <select id="commentList" resultType="AnonymousCommentVO" parameterType="int">
+	 	select * from AnonymousComment where anonymous_idx = #{anonymous_idx} and type =1 order by idx desc
+	 </select>
+ 
+ <!-- 댓글 갯수 -->
+	<select id="commentCount" resultType="int" parameterType="int">
+		select count(*) from AnonymousComment where anonymous_idx = #{anonymous_idx} and type =1
+	</select>	
+ 
+ <!-- 댓글 추가 -->
+	<insert id="commentInsert" parameterType="AnonymousCommentVO">
+	INSERT INTO ANONYMOUSCOMMENT (idx,ANONYMOUS_IDX,ID,PASSWORD,CONTENT,REGDATE,TYPE)
+	VALUES(anonymouscomment_idx_seq.nextval,#{anonymous_idx},#{id},#{password},#{content},sysdate,1)
+	</insert>
+	<insert id="CheckCommentInsert" parameterType="HashMap">
+	INSERT INTO BOARDCHECK (idx,ID_EMP,IP,BOARDTYPE,TYPE,UPDATEDATE,BOARD_IDX) 
+	VALUES (boardCheck_idx_seq.nextval,#{Id_emp},#{ip},'익명게시판댓글','등록',SYSDATE,#{board_idx})
+	</insert>
+ <!-- 댓글 삭제 -->
+ 	<update id="commentdelete" parameterType="HashMap">
+ 		update ANONYMOUSCOMMENT set regdate=sysdate, type=2 where idx=#{idx} and password=#{password}
+ 	</update>
+	<insert id="CheckCommentDelete" parameterType="HashMap">
+	INSERT INTO BOARDCHECK (idx,ID_EMP,IP,BOARDTYPE,TYPE,UPDATEDATE,BOARD_IDX) 
+	VALUES (boardCheck_idx_seq.nextval,#{Id_emp},#{ip},'익명게시판댓글','삭제',SYSDATE,#{board_idx})
+	</insert>
+<!-- 댓글의 비밀번호 -->
+<select id="commentgetpassword" resultType="String" parameterType="int">
+	select password from ANONYMOUSCOMMENT where idx=#{idx}
+</select>	
+
+ 
+ <!-- 검색용 -->
+<!-- totalpage -->
+<select id="searchACount" parameterType="HashMap" resultType="int">
+	select 
+		count(*) 
+	from 
+		anonymous 
+	where 
+		type=1 
+		<if test="field != null and field !='' ">
+			and ${field} like '%${text}%' 
+		</if> 
+	 	<if test="field == null and field =='' ">
+	 		and (id like '%${text}%'  or  subject like '%${text}%' or content like '%${text}%')
+	 	</if>
+</select>
+<!-- 결과물 -->
+<select id="searchAResult" parameterType="HashMap" resultType="AnonymousVO">
+		select
+		 R.*
+		from
+			(select
+				rownum rnum, Q.*
+			from	
+				(select 
+					*
+				 from 
+				 	anonymous  
+				 where 
+				 	type=1
+				 	<if test="field !=''">
+				 	and ${field} like '%${text}%' 
+				 	</if> 
+				 	<if test="field ==''">
+				 	and (id like '%${text}%' or subject like '%${text}%' or content like '%${text}%')
+				 	</if>
+				 order by idx desc)Q
+			<![CDATA[
+			where
+				rownum <= #{endNo}	
+			]]>)R
+		<![CDATA[
+		where
+			rnum >= #{startNo}	
+		]]>			 	
+</select>
+ 
+
+
+</mapper>

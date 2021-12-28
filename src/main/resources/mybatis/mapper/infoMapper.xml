@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="info">
+   
+<!-- 정보등록 -->
+<insert id="insert" parameterType="InfoVO">
+	insert into Info_EMP(Info_idx,Id_emp,password,name,first_phone,mid_phone,last_phone,
+	email,lev,depart,zipcode,addr1,addr2,hiredate,bank,account,temp1,state,hirestate,duty,birth)
+	values
+	(Info_idx_seq.nextval,#{Id_emp},#{password},#{name},' ',' ',' ',
+	' ',1,#{depart}, ' ',' ',' ',#{hiredate},' ',' ',' ',1, #{hirestate}, 1,'1991/11/28')
+</insert>
+<!-- 사원정보 변경하기 -->
+<update id="update" parameterType="HashMap">
+	update Info_EMP set first_phone=#{first_phone}, mid_phone=#{mid_phone}, last_phone=#{last_phone},email=#{email},
+	zipcode=#{zipcode},addr1=#{addr1},addr2=#{addr2},bank=#{bank},account= #{account}, birth=#{birth} where Id_emp=#{Id_emp}
+</update>
+	<!-- 아이디 중복확인//아이디 개수! -->
+<select id="idCount" parameterType="int" resultType="int">
+	select count(*) from Info_EMP where Id_emp=#{Id_emp}
+</select>
+<!-- 로그인(아이디와비밀번호 일치) -->
+<select id="passwordCheck" resultType="String" parameterType="int">
+	select password from Info_EMP where Id_emp=#{Id_emp}
+</select>
+	<!-- 한 개의 정보 가져오기 -->
+<select id="selectByUserid" resultType="InfoVO" parameterType="int">
+	select i.*, d.depart depart_d, l.lev lev_l, du.duty duty_du from Info_emp i, depart d,lev l,duty du 
+	where i.depart=d.idx and i.lev=l.idx and i.duty=du.idx and i.Id_emp=#{Id_emp}
+</select>
+
+
+
+
+<!-- 상태명 가져오기 -->
+<select id="getState" resultType="String" parameterType="int">
+	select B.state from Info_emp A, state B where A.state = B.idx and A.Id_emp= #{Id_emp}
+</select>
+
+
+<!-- 전직원 명단 -->
+<select id="selectAllEmp" resultType="InfoVO">
+	select i.*, d.depart depart_d, l.lev lev_l, du.duty duty_du from Info_emp i, depart d,lev l,duty du 
+	where i.depart=d.idx and i.lev=l.idx and i.duty=du.idx and i.state=1
+</select>
+
+<!-- 부서별 임직원 정보  -->
+<select id="selectDepInfo" parameterType="java.util.HashMap" resultType="InfoVO" >
+	select i.*, d.depart depart_d, l.lev lev_l, du.duty duty_du from Info_emp i, depart d,lev l,duty du 
+	where i.depart=d.idx and i.lev=l.idx and i.duty=du.idx and i.state=1 
+		<if test="depart != null">
+		and i.depart = #{depart}
+		</if>
+</select>
+
+<!-- 부서별 임직원 수 -->
+<select id="getCountDepartNo" resultType="int" parameterType="int">
+	select count(*) from Info_emp where depart = #{depart} and state=1 
+</select>
+
+<!-- 전직원 수 -->
+<select id="getCountAllEmp" resultType="int">
+	select count(*) from Info_emp where state=1 
+</select>
+
+	<!-- 1페이지 얻기 -->
+<select id="selectListfind" parameterType="HashMap" resultType="InfoVO">
+select 
+	R.*
+from
+	(select
+		rownum rnum, Q.*
+	from
+		(select * from Info_emp order by Info_idx desc) Q
+	where
+		<![CDATA[rownum <= #{endNo}) R]]>
+where
+	<![CDATA[rnum >= #{startNo}]]>
+</select>
+<!--부서용 1페이지 얻기 -->
+<select id="selectListfindDep" parameterType="HashMap" resultType="InfoVO">
+select 
+	R.*
+from
+	(select
+		rownum rnum, Q.*
+	from
+		(select *  from Info_emp  where depart = #{depart} order by Info_idx desc) Q	
+	where
+		<![CDATA[rownum <= #{endNo}) R]]>
+where
+	<![CDATA[rnum >= #{startNo}]]>
+</select>
+
+<!-- 비밀번호 변경하기 -->
+<update id="changepassword" parameterType="HashMap">
+	update Info_emp set password=#{password} where Id_emp=#{Id_emp}
+</update>
+
+<!-- 아이디 찾기 -->
+<select id="findid" resultType="int" parameterType="HashMap">
+	SELECT ID_EMP FROM INFO_EMP WHERE NAME = #{name}
+	<if test="email != null">
+	AND EMAIL = #{email}
+	</if>
+	<if test="(mid_phone != null) and (last_phone != null) ">
+	AND MID_PHONE =#{mid_phone} AND LAST_PHONE = #{last_phone}
+	</if>
+</select>
+
+<!-- 비밀번호 찾기 단계-->
+
+<!-- 이름과 사번이 일치하는가 -->
+<!-- 1. 기입한 이름과 사번이 테이블안의 사번에 존재하는가 안하는가
+		0이면 X틀린거 -->
+<select id="countpwfromname" parameterType="HashMap" resultType="int">
+	select count(*) from Info_EMP where Id_emp=#{Id_emp} and name =#{name}
+</select>
+
+ <!-- 2. 이메일이 일치하는지 안하는지 (해당사원의 이메일을 가져온다/ 그리고 대조해본다.)-->
+ <select id="selectemail" resultType="String" parameterType="int">
+ 	select email from Info_EMP where Id_emp=#{Id_emp}
+ </select>
+ 
+ 
+ <!-- 메일을 위하여~! -->
+	 <!-- 인증키를 저장해주기 -->
+	 	<update id="updateKey" parameterType="HashMap">
+	 	update Info_EMP set temp2=#{key} where Id_emp=#{Id_emp } 
+	 	</update>
+	<!-- 인증확인시 키값을 얻어오자 -->
+	<select id="getKey" parameterType="int" resultType="String">
+		select temp2 from Info_EMP where Id_emp=#{Id_emp}
+	</select> 	
+</mapper>
