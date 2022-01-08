@@ -5,7 +5,7 @@ import java.util.List;
 
 
 
-
+//테스트
 public class AnonymousVO {
 	
 	private int idx;
