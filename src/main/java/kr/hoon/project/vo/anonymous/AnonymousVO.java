@@ -3,9 +3,9 @@ package kr.hoon.project.vo.anonymous;
 import java.util.Date;
 import java.util.List;
 
-import javax.xml.bind.annotation.XmlRootElement;
 
-@XmlRootElement
+
+
 public class AnonymousVO {
 	
 	private int idx;

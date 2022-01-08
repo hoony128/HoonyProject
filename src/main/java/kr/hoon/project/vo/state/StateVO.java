@@ -1,8 +1,6 @@
 package kr.hoon.project.vo.state;
 
-import javax.xml.bind.annotation.XmlRootElement;
 
-@XmlRootElement
 public class StateVO {
 	private int idx;
 	private String state;

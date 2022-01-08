@@ -1,8 +1,6 @@
 package kr.hoon.project.vo.specialpromotion;
 
-import javax.xml.bind.annotation.XmlRootElement;
 
-@XmlRootElement
 public class SpecialPromotionVO {
 
 	private int idx;

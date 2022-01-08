@@ -2,7 +2,7 @@ package kr.hoon.project.vo.Info;
 
 import java.util.Date;
 
-import javax.xml.bind.annotation.XmlRootElement;
+
 
 /*
  	Info_idx NUMBER PRIMARY KEY,
@@ -26,7 +26,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 	temp1 varchar2(1000) NOT NULL,
 	temp2 varchar2(1000) NOT NULL
  */
-@XmlRootElement
+
 public class InfoVO {
 	private int Info_idx;
 	private int Id_emp;

@@ -1,8 +1,8 @@
 package kr.hoon.project.vo.lev;
 
-import javax.xml.bind.annotation.XmlRootElement;
 
-@XmlRootElement
+
+
 public class LevVO {
 
 	private int idx;

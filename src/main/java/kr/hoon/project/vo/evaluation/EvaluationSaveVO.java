@@ -1,8 +1,8 @@
 package kr.hoon.project.vo.evaluation;
 
-import javax.xml.bind.annotation.XmlRootElement;
 
-@XmlRootElement
+
+
 public class EvaluationSaveVO {
 	private int idx;
 	private int Id_emp_p;

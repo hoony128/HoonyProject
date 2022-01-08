@@ -1,8 +1,8 @@
 package kr.hoon.project.vo.depart;
 
-import javax.xml.bind.annotation.XmlRootElement;
 
-@XmlRootElement
+
+
 public class DepartVO {
 
 	private int idx;

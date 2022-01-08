@@ -2,9 +2,7 @@ package kr.hoon.project.vo.resignation;
 
 import java.util.Date;
 
-import javax.xml.bind.annotation.XmlRootElement;
 
-@XmlRootElement
 public class ResignationVO {
 	private int idx;
 	private int Id_emp_p;

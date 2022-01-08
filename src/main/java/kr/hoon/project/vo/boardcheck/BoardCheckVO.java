@@ -2,9 +2,9 @@ package kr.hoon.project.vo.boardcheck;
 
 import java.util.Date;
 
-import javax.xml.bind.annotation.XmlRootElement;
 
-@XmlRootElement
+
+
 public class BoardCheckVO {
 	private int idx;
 	private int Id_emp;

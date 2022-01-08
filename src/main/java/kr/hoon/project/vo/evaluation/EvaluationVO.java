@@ -2,9 +2,9 @@ package kr.hoon.project.vo.evaluation;
 
 import java.util.Date;
 
-import javax.xml.bind.annotation.XmlRootElement;
 
-@XmlRootElement
+
+
 public class EvaluationVO {
 	private int idx;
 	private int Id_emp_p;

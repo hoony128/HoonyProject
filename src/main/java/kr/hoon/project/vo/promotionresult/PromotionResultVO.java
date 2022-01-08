@@ -2,9 +2,9 @@ package kr.hoon.project.vo.promotionresult;
 
 import java.util.Date;
 
-import javax.xml.bind.annotation.XmlRootElement;
 
-@XmlRootElement
+
+
 public class PromotionResultVO {
 
 	private int idx;

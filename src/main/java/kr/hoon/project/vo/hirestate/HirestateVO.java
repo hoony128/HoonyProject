@@ -1,8 +1,8 @@
 package kr.hoon.project.vo.hirestate;
 
-import javax.xml.bind.annotation.XmlRootElement;
 
-@XmlRootElement
+
+
 public class HirestateVO {
 
 	private int idx;

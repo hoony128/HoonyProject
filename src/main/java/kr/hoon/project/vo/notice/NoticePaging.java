@@ -3,38 +3,38 @@ package kr.hoon.project.vo.notice;
 import java.io.Serializable;
 import java.util.List;
 
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlSeeAlso;
+
+
+
 
 // 1페이지 분량의 정보를 저장할 클래스
-@XmlRootElement
-@XmlSeeAlso({NoticeVO.class})
+
+
 public class NoticePaging<T> implements Serializable{
 
 	private static final long serialVersionUID = -2871491755481021815L;
 
-	// @XmlElementWrapper(name="all-list")
+	// Wrapper(name="all-list")
 	private List<T> lists; // 글목록
 	
-	@XmlElement
+	
 	private int totalCount; 	// 전체 갯수
-	@XmlElement
+	
 	private int currentPage; 	// 현재 페이지
-	@XmlElement
+	
 	private int pageSize;		// 페이지당 글 개수
-	@XmlElement
+	
 	private int blockSize;		// 아래 페이지번호 표시 개수
 	
-	@XmlElement
+	
 	private int totalPage;		// 전체 페이지 수
-	@XmlElement
+	
 	private int startNo;		// 시작 글번호
-	@XmlElement
+	
 	private int endNo;			// 끝 글번호(이것은 Oracle에서만 사용)
-	@XmlElement
+	
 	private int startPage;		// 시작 페이지번호
-	@XmlElement
+	
 	private int endPage;		// 끝 페이지번호
 	
 

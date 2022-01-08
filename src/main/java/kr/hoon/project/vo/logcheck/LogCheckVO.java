@@ -2,9 +2,9 @@ package kr.hoon.project.vo.logcheck;
 
 import java.util.Date;
 
-import javax.xml.bind.annotation.XmlRootElement;
 
-@XmlRootElement
+
+
 public class LogCheckVO {
 
 	private int idx;

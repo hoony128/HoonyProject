@@ -1,8 +1,8 @@
 package kr.hoon.project.vo.duty;
 
-import javax.xml.bind.annotation.XmlRootElement;
 
-@XmlRootElement
+
+
 public class DutyVO {
 	private int idx;
 	private String duty;
